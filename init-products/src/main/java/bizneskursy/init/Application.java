@@ -23,7 +23,7 @@ public class Application {
 
         driver.get(baseUrl);
 
-        var data = new AccountData("kamilpal2000@gmail.com", "Formula1");
+        var data = new AccountData("kamilpal2000@gmail.com", "xd");
 
         String CSV_path = "C:\\Users\\kamil\\Downloads\\BiznesKursy-main\\BiznesKursy-main\\scraping\\test.csv";
 
