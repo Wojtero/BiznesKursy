@@ -1,22 +1,34 @@
 package bizneskursy.uitest;
 
+import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Application {
 
     public static void main(String[] args) {
-        WebDriver driver = new FirefoxDriver();
+        WebDriver driver = new ChromeDriver();
 
         String baseUrl = "http://localhost:8080/";
 
         driver.get(baseUrl);
 
-        var result = testNewAccount(driver, new AccountData("Jan", "Paciorek",
-                "jan1234@example.com", "javascript", "1990-06-06"));
+        boolean result = false;
+        result = testProductAddition(driver, 1, 2);
+        result = testProductRemoval(driver);
+        result = testNewAccount(driver, new AccountData("Jan", "Paciorek",
+                "jan123456789123456789@example.com", "javascript", "1990-06-06"));
+        result = testProductOrdering(driver);
+        result = testCheckOrder(driver);
 
         System.out.println("New account result: " + result);
 
@@ -27,7 +39,7 @@ public class Application {
         driver.close();
     }
 
-    private static boolean testNewAccount(WebDriver driver, AccountData data) {
+    private static boolean testNewAccount(@NotNull WebDriver driver, @NotNull AccountData data) {
         driver.findElement(By.className("user-info")).click();
         driver.findElement(By.className("no-account")).click();
         driver.findElement(By.id("field-id_gender-1")).click();
@@ -60,6 +72,104 @@ public class Application {
 
         return driver.findElement(By.className("hidden-sm-down")).getText()
                 .contains(data.firstname() + " " + data.lastname());
+    }
+
+    private static boolean testProductAddition(@NotNull WebDriver driver, final int numberOfCategories,
+        final int numberOfProductsToAdd) {
+        var categories = driver.findElements(By.className("category")).stream()
+                .map(category -> category.findElement(By.tagName("a")).getAttribute("href"))
+                .collect(Collectors.toList());
+        var rand = new Random(1);
+
+        if (categories.size() < numberOfCategories) {
+            System.out.println("Not enough categories!");
+            return false;
+        }
+
+        var chosenCategories = takeRandomFrom(categories, numberOfCategories);
+
+        for (var category : chosenCategories) {
+            driver.navigate().to(category);
+
+            var products = driver.findElements(By.className("product"));
+
+            if (products.size() < numberOfProductsToAdd) {
+                System.out.println("Not enough products!");
+                return false;
+            }
+
+            List<WebElement> productsToAdd = takeRandomFrom(products, numberOfProductsToAdd);
+            List<String> productsToAddLinks = new LinkedList<>();
+            for (var product : productsToAdd) {
+                productsToAddLinks.add(product.findElement(By.tagName("a")).getAttribute("href"));
+            }
+
+            for (var productLink : productsToAddLinks) {
+                driver.navigate().to(productLink);
+
+                var quantity = driver.findElement(By.id("quantity_wanted"));
+                quantity.click();
+                quantity.clear();
+                quantity.sendKeys(Keys.BACK_SPACE);
+                quantity.sendKeys(String.valueOf(rand.nextInt(1, 10)));
+                driver.findElement(By.className("add-to-cart")).click();
+                driver.navigate().back();
+            }
+
+            driver.navigate().back();
+        }
+
+        return true;
+    }
+
+    private static boolean testProductRemoval(@NotNull WebDriver driver) {
+        driver.findElement(By.className("shopping-cart")).click();
+        driver.findElement(By.className("remove-from-cart")).click();
+        return true;
+    }
+
+    private static boolean testProductOrdering(@NotNull WebDriver driver) {
+        driver.findElement(By.className("shopping-cart")).click();
+        driver.findElement(By.className("btn-primary")).click();
+
+        var address1 = driver.findElement(By.id("field-address1"));
+        address1.click();
+        address1.sendKeys("ul. Przykładowa 3B/16");
+
+        var postcode = driver.findElement(By.id("field-postcode"));
+        postcode.click();
+        postcode.sendKeys("09-300");
+
+        var city = driver.findElement(By.id("field-city"));
+        city.click();
+        city.sendKeys("Żuromin");
+
+        //driver.findElement(By.className("continue")).click();
+        //driver.findElement(By.className("continue")).click();
+        driver.findElement(By.className("custom-checkbox")).click();
+
+        driver.findElement(By.className("btn-primary")).click();
+
+        return true;
+    }
+
+    private static boolean testCheckOrder(WebDriver driver) {
+        driver.findElement(By.className("account")).click();
+        driver.findElement(By.id("history-link")).click();
+        return true;
+    }
+
+    private static <T> @NotNull List<T> takeRandomFrom(List<T> list, int numberOfElements) {
+        var rand = new Random();
+        List<T> chosen = new LinkedList<>();
+
+        for (int i = 0; i < numberOfElements; i++) {
+            int randomIndex = rand.nextInt(list.size());
+            chosen.add(list.get(randomIndex));
+            list.remove(randomIndex);
+        }
+
+        return chosen;
     }
 
     private record AccountData(String firstname, String lastname, String email, String password, String birthday) {}
