@@ -17,20 +17,21 @@ class Course:
         result['Name'] = self.title
         result['Summary'] = self.short_description
         result['Description'] = self.full_description
-        result['Price tax included'] = self.price
+        result['Price tax included'] = self.price.replace(',', '')
         result['Image URLs (x, y, z...)'] = self.img_sources_to_string()
         # result['url'] = self.url
         result['ID'] = self.id
         result['Category'] = self.category
         result['URL rewritten'] = self.url_rewritten()
         result['Quantity'] = 999
+        result['Tax rule'] = 1
         return result
 
     def img_sources_to_string(self):
         res = ""
         for x in self.images:
-            res += x + ', '
-        return res[:-2]
+            res += x + ','
+        return res[:-1]
 
     def url_rewritten(self):
         new = self.title.replace(' ', '-')

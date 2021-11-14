@@ -50,7 +50,10 @@ def create_course_obj(link, driver, id):
         img = soup.find('img', {'class': 'zoomImg'})
         if img is None:
             img = soup.find('img', {'role': 'presentation'})
-        imgs.append(img['src'])
+        if img['src'] is not None:
+            imgs.append(img['src'])
+        else:
+            imgs.append(img['alt'])
         n_flag = True
     else:
         imgs = img_container.find_all('li')
