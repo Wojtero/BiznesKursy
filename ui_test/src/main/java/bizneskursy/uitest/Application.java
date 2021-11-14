@@ -1,11 +1,8 @@
 package bizneskursy.uitest;
 
 import org.jetbrains.annotations.NotNull;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.*;
+import org.openqa.selenium.firefox.FirefoxDriver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,17 +13,17 @@ import java.util.stream.Collectors;
 public class Application {
 
     public static void main(String[] args) {
-        WebDriver driver = new ChromeDriver();
+        WebDriver driver = new FirefoxDriver();
 
-        String baseUrl = "http://localhost:8080/";
+        String baseUrl = "https://localhost/";
 
         driver.get(baseUrl);
 
         boolean result = false;
-        result = testProductAddition(driver, 1, 2);
+        result = testProductAddition(driver, 2, 5);
         result = testProductRemoval(driver);
         result = testNewAccount(driver, new AccountData("Jan", "Paciorek",
-                "jan123456789123456789@example.com", "javascript", "1990-06-06"));
+                "jan13@example.com", "javascript", "1990-06-06"));
         result = testProductOrdering(driver);
         result = testCheckOrder(driver);
 
@@ -74,12 +71,13 @@ public class Application {
                 .contains(data.firstname() + " " + data.lastname());
     }
 
-    private static boolean testProductAddition(@NotNull WebDriver driver, final int numberOfCategories,
-        final int numberOfProductsToAdd) {
+    private static boolean testProductAddition(@NotNull WebDriver driver,
+        int numberOfCategories, int numberOfProductsToAdd)
+    {
         var categories = driver.findElements(By.className("category")).stream()
                 .map(category -> category.findElement(By.tagName("a")).getAttribute("href"))
                 .collect(Collectors.toList());
-        var rand = new Random(1);
+        var rand = new Random(2);
 
         if (categories.size() < numberOfCategories) {
             System.out.println("Not enough categories!");
@@ -144,11 +142,21 @@ public class Application {
         city.click();
         city.sendKeys("Żuromin");
 
-        //driver.findElement(By.className("continue")).click();
-        //driver.findElement(By.className("continue")).click();
-        driver.findElement(By.className("custom-checkbox")).click();
+        driver.findElements(By.className("continue")).stream()
+                .filter(e -> e.getAttribute("name").equals("confirm-addresses"))
+                .collect(Collectors.toList())
+                .get(0)
+                .click();
 
-        driver.findElement(By.className("btn-primary")).click();
+        driver.findElements(By.className("continue")).stream()
+                .filter(e -> e.getAttribute("name").equals("confirmDeliveryOption"))
+                .collect(Collectors.toList())
+                .get(0)
+                .click();
+
+        driver.findElement(By.id("conditions_to_approve[terms-and-conditions]")).click();
+
+        driver.findElement(By.id("payment-confirmation")).findElement(By.tagName("button")).click();
 
         return true;
     }
@@ -156,6 +164,7 @@ public class Application {
     private static boolean testCheckOrder(WebDriver driver) {
         driver.findElement(By.className("account")).click();
         driver.findElement(By.id("history-link")).click();
+        driver.findElement(By.className("order-actions")).findElement(By.tagName("a")).click();
         return true;
     }
 
