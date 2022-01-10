@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class Application {
 
     /** Url of the tested webpage. */
-    private static final String baseUrl = "https://localhost/";
+    private static final String baseUrl = "https://localhost:5718/";
 
     /** Performs all tests. */
     public static void main(String[] args) {
@@ -32,7 +32,7 @@ public class Application {
         System.out.println("Product removal result: " + successOrFailureString(result));
 
         result = testNewAccount(driver, new AccountData("Jan", "Paciorek",
-                "jan20@example.com", "javascript", "1990-05-20"));
+                "jan2116@example.com", "javascript", "1990-05-20"));
         System.out.println("New account result: " + successOrFailureString(result));
 
         result = testProductOrdering(driver);
@@ -109,8 +109,9 @@ public class Application {
                     quantity.click();
                     quantity.clear();
                     quantity.sendKeys(Keys.BACK_SPACE);
-                    quantity.sendKeys(String.valueOf(rand.nextInt(1, 10)));
+                    quantity.sendKeys(String.valueOf(rand.nextInt(9)));
                     driver.findElement(By.className("add-to-cart")).click();
+                    Thread.sleep(3000);
                     driver.navigate().back();
                 }
 
@@ -121,6 +122,9 @@ public class Application {
             printTestExceptionInfo("product addition", exception);
             driver.navigate().to(baseUrl);
             return false;
+        }
+        catch(InterruptedException ex){
+            System.err.println(ex.getMessage());
         }
 
         return true;
@@ -135,11 +139,15 @@ public class Application {
         try {
             driver.findElement(By.className("shopping-cart")).click();
             driver.findElement(By.className("remove-from-cart")).click();
+            Thread.sleep(3000);
         }
         catch (WebDriverException exception) {
             printTestExceptionInfo("product removal", exception);
             driver.navigate().to(baseUrl);
             return false;
+        }
+        catch (InterruptedException ex){
+            System.err.println(ex.getMessage());
         }
         return true;
     }
@@ -221,7 +229,7 @@ public class Application {
                     .click();
 
             try {
-                driver.findElement(By.id("delivery_option_2")).click();
+                driver.findElement(By.id("delivery_option_7")).click();
             }
             catch (WebDriverException exception) {
                 System.out.println("Only one delivery option!");
@@ -260,6 +268,7 @@ public class Application {
      */
     private static boolean testCheckOrder(WebDriver driver) {
         try {
+            Thread.sleep(5000);
             driver.findElement(By.className("account")).click();
             driver.findElement(By.id("history-link")).click();
             driver.findElement(By.className("order-actions")).findElement(By.tagName("a")).click();
@@ -271,6 +280,9 @@ public class Application {
             printTestExceptionInfo("checking order", exception);
             driver.navigate().to(baseUrl);
             return false;
+        }
+        catch (InterruptedException ex){
+            System.err.println(ex.getMessage());
         }
         return true;
     }
